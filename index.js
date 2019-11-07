@@ -24,9 +24,6 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 var Request = require("request");
 
-const MinecraftData = require("./minecraftdata.js");
-var mc = new MinecraftData("ack");
-
 client.on('ready', () => {
     PrintToConsle("Logged in as " + client.user.tag);
     FetchApiData();
