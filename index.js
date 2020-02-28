@@ -10,13 +10,13 @@ var playerCount = 0;
 var activePlayersArray = Array();
 var serverStatus = null;
 var mcVer = null;
-var modpack = "FTB Presents Direwolf20 1.12 (2.5.0)"
+var modpack = "FTB Presents Direwolf20 1.12 (2.5.0)" //Havn
 var hostname = null;
 
 // console.log("test");
 
 //Config
-var delay = 120000;
+var delay = 120000; //Timeout for pinging the Minecraft server API, the API has a update time of 2mins
 
 
 
@@ -32,7 +32,7 @@ client.on('ready', () => {
 client.on('message', msg => {
     let msgContent = null;
 
-    if (msg.content.startsWith("/MC")) {
+    if (msg.content.startsWith("/MC") || msg.content.startsWith("/mc")) {
         //Prints the request to console for debugging         
         PrintToConsle(msg.author.username + ": " + msg.content);
 
@@ -67,7 +67,11 @@ client.on('message', msg => {
                 break;
 
             default:
-                msgContent = "Unkown command";
+                msgContent = "Unkown command. Avalible commands: \n";
+                msgContent += "/MC status\n";
+                msgContent += "/MC players\n";
+                msgContent += "/MC ver\n"; 
+                msgContent += "/MC server";
                 RespondToDiscord(msg, msgContent);
                 break;
         }
