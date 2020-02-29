@@ -24,6 +24,10 @@ class Player {
         let diff = (time.getTime() - this.LastLogout.getTime()) / 60000;
         return Math.round(diff);
     }
+
+    toString() {
+        return this.Name + " (" + this.MinutesLogedIn() +")";
+    }
 }
 
 module.exports = Player

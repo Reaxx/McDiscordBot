@@ -51,7 +51,7 @@ client.on('message', msg => {
                 break;
 
             case "/mc players":
-                msgContent = "Players on server: " + activePlayerNamesArray.join(", ");
+                msgContent = "Players on server: \n" + ParsePlayers();
                 RespondToDiscord(msg, msgContent);
                 break;
 
@@ -123,6 +123,9 @@ function PrintToConsle($msg) {
  * @param {*} data Raw data from the Minecraft API
  */
 function ParseAndCacheApiData(data) {
+    //If data from API failed, return
+    if(!data) { return; }
+
     playerCount = data.players.online;
 
     activePlayerNamesArray = data.players.list || new Array();
@@ -169,6 +172,19 @@ function CheckForNewPlayers() {
         }
     });
 
+}
+
+function ParsePlayers() {
+    // var output; 
+    // PlayersArray.forEach(player => {
+    //     output += player.Name + " (" + player.MinutesLogedIn() + "min)\n";    
+    // });
+
+    let output = PlayersArray.join(", ");
+
+    if(!output) { return "-"; }
+
+    return output;
 }
 
 function CheckPlayerStatus() {
