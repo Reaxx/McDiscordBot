@@ -26,6 +26,7 @@ var Request = require("request");
 
 client.on('ready', () => {
     PrintToConsle("Logged in as " + client.user.tag);
+    SendNewMessegeToDiscord("Discord Minecraft Bot is now running.");
     FetchApiData();
 })
 
@@ -138,9 +139,9 @@ function CheckForNewPlayers(data) {
     }
 }
 
-function SendNewMessegeToDiscord(msgContent) {
+function SendNewMessegeToDiscord(msgContent,channelName = "bots") {
     try {
-    let channelName = "mcbot";
+    // let channelName = "mcbot";
     PrintToConsle(msgContent);
 
     PrintToConsle("Sending messege to server");
