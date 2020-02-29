@@ -214,7 +214,7 @@ function SendNewMessegeToDiscord(msgContent,channelName = process.env.DEFAULT_CH
     try {
     PrintToConsle("Sending messege to Discord: " +msgContent);
     let channel = client.channels.find('name',channelName);
-    // channel.send(msgContent);
+    channel.send(msgContent);
     }
     catch(error) {
         console.error(error);
