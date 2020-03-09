@@ -5,13 +5,13 @@ const Player = require("./player.js");
 
 
 //Api data
-var rawApiData = null;
-var playerCount = 0;
-var activePlayerNamesArray = Array();
-var serverStatus = null;
-var mcVer = null;
-var modpack = "FTB Presents Direwolf20 1.12 (2.5.0)" //Havn
-var hostname = null;
+var RawApiData = null;
+var PlayerCount = 0;
+var ActivePlayerNamesArray = Array();
+var ServerStatus = null;
+var McVer = null;
+var Modpack = "FTB Presents Direwolf20 1.12 (2.5.0)" //Havn
+var Hostname = null;
 var PlayersArray = Array();
 
 // console.log("test");
@@ -40,8 +40,8 @@ client.on('message', msg => {
         switch (msg.content.toLowerCase()) {
             case "/mc status":
 
-                if (serverStatus) {
-                    msgContent = "Server is online, " + playerCount + " players are logged on.";
+                if (ServerStatus) {
+                    msgContent = "Server is online, " + PlayerCount + " players are logged on.";
                 }
                 else {
                     msgContent = "Server offline";
@@ -51,28 +51,35 @@ client.on('message', msg => {
                 break;
 
             case "/mc players":
-                msgContent = "Players on server: \n" + ParsePlayers();
+                msgContent = "Players on server: \n" + ParseOnlinePlayers();
                 RespondToDiscord(msg, msgContent);
                 break;
 
             case "/mc ver":
-                msgContent = "Minecraft " + mcVer + "\n";
-                msgContent += modpack;
+                msgContent = "Minecraft " + McVer + "\n";
+                msgContent += Modpack;
                 RespondToDiscord(msg, msgContent);
                 break;
 
             case "/mc server":
-                msgContent = hostname;
+                msgContent = Hostname;
                 msgContent += " (" + ip +")";
                 RespondToDiscord(msg, msgContent);
                 break;
+
+            case "/mc api":
+                msgContent = process.env.API_URL;
+                RespondToDiscord(msg, msgContent);
+               break;
+    
 
             default:
                 msgContent = "Unkown command. Avalible commands: \n";
                 msgContent += "/MC status\n";
                 msgContent += "/MC players\n";
                 msgContent += "/MC ver\n"; 
-                msgContent += "/MC server";
+                msgContent += "/MC server\n";
+                msgContent += "/MC api";
                 RespondToDiscord(msg, msgContent);
                 break;
         }
@@ -95,7 +102,7 @@ function RespondToDiscord(msg, msgContent) {
 function FetchApiData() {
     PrintToConsle("Fetching data from API");
 
-    Request.get("https://api.mcsrvstat.us/2/minecraft.spelaroll.eu", (error, response, body) => {
+    Request.get(process.env.API_URL, (error, response, body) => {
         if (error) {
             return PrintToConsle(error);
         }
@@ -103,7 +110,11 @@ function FetchApiData() {
 
         let data = JSON.parse(body)
 
-        ParseAndCacheApiData(JSON.parse(body));
+        ParseAndCacheApiData(data);
+
+        //IF server is offline, don't bother with checking players.
+        if(!ServerStatus) {return; }
+
         CheckPlayerStatus();
         CheckForNewPlayers();
 
@@ -126,14 +137,23 @@ function ParseAndCacheApiData(data) {
     //If data from API failed, return
     if(!data) { return; }
 
-    playerCount = data.players.online;
+    PlayerCount = 0;
+    ActivePlayerNamesArray = new Array();
 
-    activePlayerNamesArray = data.players.list || new Array();
-    activePlayerNamesArray.sort();
+    if(data.players) {
+        PlayerCount = data.players.online;
+        ActivePlayerNamesArray = data.players.list || new Array();
+        ActivePlayerNamesArray.sort();
+    }
+    else {
+        PlayerCount = 0;
+        ActivePlayerNamesArray = Array();
+        PrintToConsle("Server is offline");
+    }
 
-    serverStatus = data.online;
-    mcVer = data.version;
-    hostname = data.hostname;
+    ServerStatus = data.online;
+    McVer = data.version;
+    Hostname = data.hostname;
     ip = data.ip + ":" + data.port;
 
     rawAPIdata = data;
@@ -142,7 +162,7 @@ function ParseAndCacheApiData(data) {
 function CheckForNewPlayers() {
     PrintToConsle("Checking for new players");
 
-    activePlayerNamesArray.forEach(playerName => {
+    ActivePlayerNamesArray.forEach(playerName => {
         let player = PlayersArray.find( x=> x.Name == playerName);
 
         //If player not in list, creates object.
@@ -174,14 +194,23 @@ function CheckForNewPlayers() {
 
 }
 
-function ParsePlayers() {
+function ParseOnlinePlayers() {
     // var output; 
     // PlayersArray.forEach(player => {
     //     output += player.Name + " (" + player.MinutesLogedIn() + "min)\n";    
     // });
 
-    let output = PlayersArray.join(", ");
+    let tmpActivePlayers = Array();
 
+    PlayersArray.forEach(player => {
+        if(player.IsLoggedIn) {
+            tmpActivePlayers.push(player);
+        }
+    });
+
+    tmpActivePlayers.sort;
+
+    let output = tmpActivePlayers.join(",");
     if(!output) { return "-"; }
 
     return output;
@@ -194,7 +223,7 @@ function CheckPlayerStatus() {
         //If player already marked as logged out, ignore.
         if(!player.IsLoggedIn) { return; };
 
-        let activePlayer = activePlayerNamesArray.find(x => x == player.Name)
+        let activePlayer = ActivePlayerNamesArray.find(x => x == player.Name)
 
         //Checks if is still in list, otherwise loggs out.
         if (!activePlayer)
