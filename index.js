@@ -63,21 +63,21 @@ client.on('message', msg => {
 
             case "/mc server":
                 msgContent = Hostname;
-                msgContent += " (" + ip +")";
+                msgContent += " (" + ip + ")";
                 RespondToDiscord(msg, msgContent);
                 break;
 
             case "/mc api":
                 msgContent = process.env.API_URL;
                 RespondToDiscord(msg, msgContent);
-               break;
-    
+                break;
+
 
             default:
                 msgContent = "Unkown command. Avalible commands: \n";
                 msgContent += "/MC status\n";
                 msgContent += "/MC players\n";
-                msgContent += "/MC ver\n"; 
+                msgContent += "/MC ver\n";
                 msgContent += "/MC server\n";
                 msgContent += "/MC api";
                 RespondToDiscord(msg, msgContent);
@@ -92,9 +92,9 @@ client.login(process.env.BOT_TOKEN);
 function RespondToDiscord(msg, msgContent) {
     try {
         msg.reply(msgContent);
-        PrintToConsle("Sending response to Discord: " +msgContent);
+        PrintToConsle("Sending response to Discord: " + msgContent);
     }
-    catch(error) {
+    catch (error) {
         PrintToConsle(error);
     }
 }
@@ -107,13 +107,19 @@ function FetchApiData() {
             return PrintToConsle(error);
         }
 
+        //Parsing JSON
+        let data;
+        try {
+            data = JSON.parse(body);
+        } catch (ex) {
+            PrintToConsle(ex);
+        }
 
-        let data = JSON.parse(body)
 
         ParseAndCacheApiData(data);
 
         //IF server is offline, don't bother with checking players.
-        if(!ServerStatus) {return; }
+        if (!ServerStatus) { return; }
 
         CheckPlayerStatus();
         CheckForNewPlayers();
@@ -135,12 +141,12 @@ function PrintToConsle($msg) {
  */
 function ParseAndCacheApiData(data) {
     //If data from API failed, return
-    if(!data) { return; }
+    if (!data) { return; }
 
     PlayerCount = 0;
     ActivePlayerNamesArray = new Array();
 
-    if(data.players) {
+    if (data.players) {
         PlayerCount = data.players.online;
         ActivePlayerNamesArray = data.players.list || new Array();
         ActivePlayerNamesArray.sort();
@@ -163,32 +169,31 @@ function CheckForNewPlayers() {
     PrintToConsle("Checking for new players");
 
     ActivePlayerNamesArray.forEach(playerName => {
-        let player = PlayersArray.find( x=> x.Name == playerName);
+        let player = PlayersArray.find(x => x.Name == playerName);
 
         //If player not in list, creates object.
-        if(!player) {
+        if (!player) {
             var p = new Player(playerName);
             PlayersArray.push(p);
-         
+
             //Sends messege to log and discord
             msgContent = p.Name + " came online";
             SendNewMessegeToDiscord(msgContent);
             PrintToConsle(playerName + "-object created");
-        }      
+        }
         //If player logged out, logins in.
         else if (!player.IsLoggedIn) {
             player.LogIn();
 
             //If player has been offline for for time set in .env, sends message to discord
-            if(player.MinutesSinceLastLogin() >= process.env.LOGIN_ANNOUNCMENT_SUP_TIMER)
-            {
+            if (player.MinutesSinceLastLogin() >= process.env.LOGIN_ANNOUNCMENT_SUP_TIMER) {
                 SmsgContent = player.Name + " came online";
                 SendNewMessegeToDiscord(msgContent);
             }
             else {
                 PrintToConsle(playerName + "logged in. Time between logins to short (" + player.MinutesSinceLastLogin() + "), messege not sent to discord.");
             }
-            
+
         }
     });
 
@@ -203,7 +208,7 @@ function ParseOnlinePlayers() {
     let tmpActivePlayers = Array();
 
     PlayersArray.forEach(player => {
-        if(player.IsLoggedIn) {
+        if (player.IsLoggedIn) {
             tmpActivePlayers.push(player);
         }
     });
@@ -211,7 +216,7 @@ function ParseOnlinePlayers() {
     tmpActivePlayers.sort;
 
     let output = tmpActivePlayers.join(",");
-    if(!output) { return "-"; }
+    if (!output) { return "-"; }
 
     return output;
 }
@@ -221,37 +226,36 @@ function CheckPlayerStatus() {
 
     PlayersArray.forEach(player => {
         //If player already marked as logged out, ignore.
-        if(!player.IsLoggedIn) { return; };
+        if (!player.IsLoggedIn) { return; };
 
         let activePlayer = ActivePlayerNamesArray.find(x => x == player.Name)
 
         //Checks if is still in list, otherwise loggs out.
-        if (!activePlayer)
-        {
+        if (!activePlayer) {
             player.LogOut();
-            PrintToConsle("Logged out "+ player.Name + " (" + player.MinutesLogedIn() + "m)");
-        }       
+            PrintToConsle("Logged out " + player.Name + " (" + player.MinutesLogedIn() + "m)");
+        }
         else {
-            PrintToConsle(player.Name+" is still active (" + player.MinutesLogedIn() +"m)");
+            PrintToConsle(player.Name + " is still active (" + player.MinutesLogedIn() + "m)");
         }
 
     });
 }
 
-    //Sends a message to the Discord-Channel, as default reads the .env file.
-function SendNewMessegeToDiscord(msgContent,channelName = process.env.DEFAULT_CHANNEL) {
+//Sends a message to the Discord-Channel, as default reads the .env file.
+function SendNewMessegeToDiscord(msgContent, channelName = process.env.DEFAULT_CHANNEL) {
     try {
-    PrintToConsle("Sending messege to Discord: " +msgContent);
-    let channel = client.channels.find('name',channelName);
-    channel.send(msgContent);
+        PrintToConsle("Sending messege to Discord: " + msgContent);
+        let channel = client.channels.find('name', channelName);
+        channel.send(msgContent);
     }
-    catch(error) {
+    catch (error) {
         console.error(error);
     }
 }
 
 function ArrayDiff(newArray, oldArray) {
-    if(!newArray) { return new Array(); }
+    if (!newArray) { return new Array(); }
 
     let newPlayers = new Array();
 
